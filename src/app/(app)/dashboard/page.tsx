@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { SPARKS_PER_MONTH, getCurrentMonthKey } from "@/lib/constants";

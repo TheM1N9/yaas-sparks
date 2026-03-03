@@ -31,6 +31,7 @@ export default async function LeaderboardPage() {
     <LeaderboardClient
       employees={employees ?? []}
       categoryBreakdown={categoryBreakdown}
+      currentUserId={user.id}
     />
   );
 }

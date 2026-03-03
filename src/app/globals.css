@@ -7,7 +7,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-bricolage);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -55,40 +56,43 @@
   --color-spark-reliability: #10B981;
   --color-spark-knowledge: #06B6D4;
   --color-spark-spirit: #EF4444;
+  --color-warm-50: #FDF8F4;
+  --color-warm-100: #FBF0E8;
+  --color-warm-200: #F5E0D0;
 }
 
 :root {
   --radius: 0.625rem;
-  --background: #FFFFFF;
-  --foreground: #111111;
+  --background: #FDF8F4;
+  --foreground: #1C1917;
   --card: #FFFFFF;
-  --card-foreground: #111111;
+  --card-foreground: #1C1917;
   --popover: #FFFFFF;
-  --popover-foreground: #111111;
+  --popover-foreground: #1C1917;
   --primary: #E05C33;
   --primary-foreground: #FFFFFF;
-  --secondary: #F8F8F8;
-  --secondary-foreground: #111111;
-  --muted: #F8F8F8;
-  --muted-foreground: #6B7280;
-  --accent: #F8F8F8;
-  --accent-foreground: #111111;
+  --secondary: #FBF0E8;
+  --secondary-foreground: #1C1917;
+  --muted: #F5E0D0;
+  --muted-foreground: #78716C;
+  --accent: #FBF0E8;
+  --accent-foreground: #1C1917;
   --destructive: #EF4444;
-  --border: #E5E5E5;
-  --input: #E5E5E5;
+  --border: #E7DDD4;
+  --input: #E7DDD4;
   --ring: #E05C33;
   --chart-1: #E05C33;
   --chart-2: #3B82F6;
   --chart-3: #10B981;
   --chart-4: #F59E0B;
   --chart-5: #8B5CF6;
-  --sidebar: #FAFAFA;
-  --sidebar-foreground: #111111;
+  --sidebar: #1C1917;
+  --sidebar-foreground: #E7E5E4;
   --sidebar-primary: #E05C33;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F3F3F3;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: #F0F0F0;
+  --sidebar-accent: #292524;
+  --sidebar-accent-foreground: #FAFAF9;
+  --sidebar-border: #292524;
   --sidebar-ring: #E05C33;
 }
 
@@ -111,18 +115,22 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: #d6ccc2;
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: #a8a29e;
   }
 }
+
+/* =============================================
+   KEYFRAME ANIMATIONS
+   ============================================= */
 
 /* Glow effects for milestones */
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 8px rgba(224, 92, 51, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(224, 92, 51, 0.5); }
+  50% { box-shadow: 0 0 24px rgba(224, 92, 51, 0.6), 0 0 48px rgba(224, 92, 51, 0.2); }
 }
 
 .milestone-glow {
@@ -132,9 +140,151 @@
 /* Progress bar glow */
 @keyframes progress-glow {
   0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.2); }
+  50% { filter: brightness(1.15); }
 }
 
 .progress-glow {
   animation: progress-glow 2s ease-in-out infinite;
+}
+
+/* Gold crown glow for #1 on leaderboard */
+@keyframes crown-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3), 0 0 60px rgba(245, 158, 11, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.5), 0 0 80px rgba(245, 158, 11, 0.2);
+  }
+}
+
+.crown-glow {
+  animation: crown-glow 3s ease-in-out infinite;
+}
+
+/* Shimmer effect for unlockable items */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Float animation for success states */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  display: inline-block;
+}
+
+/* Gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, #E05C33 0%, #F59E0B 50%, #FF8C42 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Warm card with subtle gradient */
+.warm-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FDF8F4 100%);
+  border: 1px solid #F0E6DC;
+}
+
+/* (stat card rainbow classes removed — using white + border now) */
+
+/* (nav-active-glow removed — using border-l instead) */
+
+/* Podium gold card */
+.podium-gold {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 30%, #FDE68A 100%);
+  border: 2px solid #F59E0B;
+}
+
+.podium-silver {
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 50%, #E5E7EB 100%);
+  border: 1px solid #D1D5DB;
+}
+
+.podium-bronze {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+  border: 1px solid #D97706;
+}
+
+/* Category card hover effect */
+.category-card {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.category-card:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Locked milestone card */
+.milestone-locked {
+  filter: grayscale(0.3);
+  opacity: 0.6;
+}
+
+/* Unlocked milestone card */
+.milestone-unlocked {
+  position: relative;
+  overflow: hidden;
+}
+.milestone-unlocked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(224, 92, 51, 0.08) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Claimed milestone */
+.milestone-claimed {
+  background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+  border: 1px solid #6EE7B7;
+}
+
+/* (cta-pulse removed — no longer needed) */
+
+/* Feed card hover */
+.feed-card {
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.feed-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Subtle background pattern */
+.bg-dot-pattern {
+  background-image: radial-gradient(circle, #E7DDD4 1px, transparent 1px);
+  background-size: 24px 24px;
 }

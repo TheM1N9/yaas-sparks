@@ -80,8 +80,8 @@ export function AdminClient({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Admin Panel</h1>
-          <p className="text-muted-foreground">Manage employees, sparks, and monthly resets</p>
+          <h1 className="text-3xl font-display font-bold tracking-tight">Admin Panel</h1>
+          <p className="text-muted-foreground text-[15px]">Manage employees, sparks, and monthly resets</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleExportCSV}>

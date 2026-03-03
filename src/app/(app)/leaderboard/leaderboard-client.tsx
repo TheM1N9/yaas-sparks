@@ -2,14 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "motion/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { SPARK_CATEGORIES } from "@/lib/constants";
-import { cn } from "@/lib/utils";
-
-function getInitials(name: string) {
-  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-}
+import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 
 interface LeaderboardEmployee {
   id: string;
@@ -20,20 +17,38 @@ interface LeaderboardEmployee {
   current_cycle_sparks: number;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
+};
+
 export function LeaderboardClient({
   employees,
   categoryBreakdown,
+  currentUserId,
 }: {
   employees: LeaderboardEmployee[];
   categoryBreakdown: Record<string, Record<string, number>>;
+  currentUserId: string;
 }) {
   const [view, setView] = useState<"all" | "month">("all");
 
-  const sorted = [...employees].sort((a, b) =>
-    view === "all"
+  const pluralize = (count: number) => `${count} ${count === 1 ? 'spark' : 'sparks'}`;
+
+  const sorted = [...employees].sort((a, b) => {
+    const diff = view === "all"
       ? b.sparks_earned_total - a.sparks_earned_total
-      : b.current_cycle_sparks - a.current_cycle_sparks
-  );
+      : b.current_cycle_sparks - a.current_cycle_sparks;
+    return diff !== 0 ? diff : a.name.localeCompare(b.name);
+  });
 
   const getCount = (emp: LeaderboardEmployee) =>
     view === "all" ? emp.sparks_earned_total : emp.current_cycle_sparks;
@@ -43,21 +58,26 @@ export function LeaderboardClient({
   const medals = ["🥇", "🥈", "🥉"];
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <motion.div
+      className="space-y-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.div className="flex items-center justify-between" variants={itemVariants}>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Leaderboard</h1>
+          <h1 className="text-3xl font-display font-bold tracking-tight">Leaderboard</h1>
           <p className="text-muted-foreground text-[15px] mt-0.5">Top spark earners across the company</p>
         </div>
 
         {/* Pill toggle */}
-        <div className="flex bg-muted rounded-lg p-1">
+        <div className="flex bg-white rounded-2xl p-1 border border-border/60 shadow-sm">
           <button
             onClick={() => setView("all")}
             className={cn(
-              "px-4 py-1.5 text-[13px] font-medium rounded-md transition-all",
+              "px-5 py-2 text-[13px] font-semibold rounded-xl transition-all duration-200",
               view === "all"
-                ? "bg-white text-foreground shadow-sm"
+                ? "bg-gradient-to-r from-primary to-amber-500 text-white shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -66,111 +86,191 @@ export function LeaderboardClient({
           <button
             onClick={() => setView("month")}
             className={cn(
-              "px-4 py-1.5 text-[13px] font-medium rounded-md transition-all",
+              "px-5 py-2 text-[13px] font-semibold rounded-xl transition-all duration-200",
               view === "month"
-                ? "bg-white text-foreground shadow-sm"
+                ? "bg-gradient-to-r from-primary to-amber-500 text-white shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
             This Cycle
           </button>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Top 3 podium */}
+      {/* Top 3 podium — award ceremony style */}
       {top3.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <motion.div className="grid grid-cols-3 gap-3 sm:gap-5 items-end" variants={itemVariants}>
           {/* Reorder: 2nd, 1st, 3rd for visual podium effect */}
           {[1, 0, 2].map((idx) => {
             const emp = top3[idx];
             if (!emp) return <div key={idx} />;
             const count = getCount(emp);
             const isFirst = idx === 0;
+            const isSecond = idx === 1;
+
             return (
-              <Link
+              <motion.div
                 key={emp.id}
-                href={`/profile/${emp.id}`}
-                className={cn(
-                  "flex flex-col items-center text-center p-4 sm:p-5 rounded-2xl transition-all hover:-translate-y-0.5",
-                  isFirst
-                    ? "bg-gradient-to-b from-amber-50 to-white border-2 border-amber-200/60 shadow-md sm:-mt-4 sm:pb-7"
-                    : "bg-white border border-border/60 shadow-sm mt-2"
-                )}
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
-                <span className="text-2xl sm:text-3xl mb-2">{medals[idx]}</span>
-                <Avatar className={cn("mb-2", isFirst ? "h-16 w-16" : "h-12 w-12")}>
-                  <AvatarImage src={emp.avatar_url ?? undefined} />
-                  <AvatarFallback className={cn("font-medium bg-muted", isFirst ? "text-lg" : "text-sm")}>
-                    {getInitials(emp.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <p className="font-semibold text-sm truncate max-w-full">{emp.name}</p>
-                <p className="text-[11px] text-muted-foreground">{emp.team}</p>
-                <div className="mt-2 bg-primary/10 text-primary font-bold text-sm px-3 py-1 rounded-full">
-                  {count} sparks
-                </div>
-              </Link>
+                <Link
+                  href={`/profile/${emp.id}`}
+                  className={cn(
+                    "flex flex-col items-center text-center p-4 sm:p-6 rounded-3xl transition-all relative overflow-hidden",
+                    isFirst
+                      ? "podium-gold crown-glow sm:pb-8"
+                      : isSecond
+                      ? "podium-silver sm:pb-6"
+                      : "podium-bronze sm:pb-6"
+                  )}
+                >
+                  {/* Crown decoration for #1 */}
+                  {isFirst && (
+                    <motion.div
+                      className="absolute -top-2 left-1/2 -translate-x-1/2 text-3xl sm:text-4xl"
+                      animate={{ y: [0, -4, 0], rotate: [0, -3, 3, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      👑
+                    </motion.div>
+                  )}
+
+                  <span className={cn("mb-2 mt-2", isFirst ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl")}>{medals[idx]}</span>
+
+                  <div className="relative">
+                    <Avatar className={cn(
+                      "mb-2 ring-4 shadow-lg",
+                      isFirst ? "h-20 w-20 ring-amber-300" : "h-14 w-14 ring-border/40"
+                    )}>
+                      <AvatarImage src={emp.avatar_url ?? undefined} />
+                      <AvatarFallback
+                        className={cn("font-display font-bold text-white", isFirst ? "text-xl" : "text-sm")}
+                        style={{ backgroundColor: getAvatarColor(emp.name) }}
+                      >
+                        {getInitials(emp.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {/* Animated glow ring for #1 */}
+                    {isFirst && (
+                      <div className="absolute inset-0 rounded-full border-2 border-amber-400/30 animate-ping" style={{ animationDuration: '3s' }} />
+                    )}
+                  </div>
+
+                  <p className="font-display font-bold text-sm truncate max-w-full mt-1">{emp.name}</p>
+                  {emp.team && emp.team !== "General" && <p className="text-[11px] text-muted-foreground">{emp.team}</p>}
+
+                  <motion.div
+                    className={cn(
+                      "mt-3 font-display font-bold text-base px-4 py-1.5 rounded-2xl",
+                      isFirst
+                        ? "bg-amber-500 text-white shadow-[0_4px_12px_rgba(245,158,11,0.3)]"
+                        : "bg-primary/10 text-primary"
+                    )}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.3 + idx * 0.1, type: "spring", stiffness: 400 }}
+                  >
+                    {pluralize(count)}
+                  </motion.div>
+                </Link>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
+
+      {/* Your rank banner (if not in top 3) */}
+      {(() => {
+        const myRank = sorted.findIndex((e) => e.id === currentUserId);
+        if (myRank >= 3) {
+          return (
+            <motion.div variants={itemVariants}>
+              <div className="bg-primary/8 border border-primary/20 rounded-2xl px-5 py-3 text-sm font-medium">
+                Your rank: <span className="font-display font-bold text-primary">#{myRank + 1}</span>
+                <span className="text-muted-foreground ml-2">of {sorted.length}</span>
+              </div>
+            </motion.div>
+          );
+        }
+        return null;
+      })()}
 
       {/* Rest of the list */}
       {rest.length > 0 && (
-        <Card className="border-0 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-          <CardContent className="p-2">
-            {rest.map((emp, i) => {
-              const count = getCount(emp);
-              if (count === 0) return null;
-              const rank = i + 4;
-              const cats = categoryBreakdown[emp.id] || {};
-              return (
-                <Link
-                  key={emp.id}
-                  href={`/profile/${emp.id}`}
-                  className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-muted/50 transition-colors"
-                >
-                  <span className="w-8 text-center text-sm font-semibold text-muted-foreground tabular-nums">
-                    {rank}
-                  </span>
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={emp.avatar_url ?? undefined} />
-                    <AvatarFallback className="text-xs bg-muted font-medium">{getInitials(emp.name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{emp.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{emp.team}</p>
-                  </div>
-                  <div className="hidden sm:flex items-center gap-1">
-                    {SPARK_CATEGORIES.map((cat) => {
-                      const c = cats[cat.name] || 0;
-                      if (c === 0) return null;
-                      return (
-                        <span
-                          key={cat.code}
-                          className="inline-block w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: cat.color }}
-                          title={`${cat.name}: ${c}`}
-                        />
-                      );
-                    })}
-                  </div>
-                  <span className="bg-primary/10 text-primary font-bold text-[13px] px-3 py-1 rounded-full tabular-nums">
-                    {count}
-                  </span>
-                </Link>
-              );
-            })}
-          </CardContent>
-        </Card>
+        <motion.div variants={itemVariants}>
+          <Card className="border-0 warm-card rounded-2xl shadow-sm overflow-hidden">
+            <CardContent className="p-2">
+              {rest.map((emp, i) => {
+                const count = getCount(emp);
+                const rank = i + 4;
+                const cats = categoryBreakdown[emp.id] || {};
+                return (
+                  <motion.div
+                    key={emp.id}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                  >
+                    <Link
+                      href={`/profile/${emp.id}`}
+                      className="flex items-center gap-3 rounded-2xl px-4 py-3.5 hover:bg-accent/60 transition-all duration-200 group"
+                    >
+                      <span className="w-9 h-9 flex items-center justify-center text-sm font-display font-bold text-muted-foreground bg-accent rounded-xl tabular-nums">
+                        {rank}
+                      </span>
+                      <Avatar className="h-10 w-10 ring-2 ring-border/30">
+                        <AvatarImage src={emp.avatar_url ?? undefined} />
+                        <AvatarFallback className="text-xs text-white font-semibold" style={{ backgroundColor: getAvatarColor(emp.name) }}>{getInitials(emp.name)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{emp.name}</p>
+                        {emp.team && emp.team !== "General" && <p className="text-[11px] text-muted-foreground">{emp.team}</p>}
+                      </div>
+                      <div className="hidden sm:flex items-center gap-1.5">
+                        {SPARK_CATEGORIES.map((cat) => {
+                          const c = cats[cat.name] || 0;
+                          if (c === 0) return null;
+                          return (
+                            <span
+                              key={cat.code}
+                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg text-[10px] font-bold text-white"
+                              style={{ backgroundColor: cat.color }}
+                              title={`${cat.name}: ${c}`}
+                            >
+                              {c}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      <span className="bg-primary/10 text-primary font-display font-bold text-[13px] px-3.5 py-1.5 rounded-xl tabular-nums">
+                        {count}
+                      </span>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
       {sorted.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground">
-          <span className="text-4xl block mb-3">🏆</span>
-          <p>No one on the leaderboard yet!</p>
-        </div>
+        <motion.div
+          className="text-center py-20 text-muted-foreground"
+          variants={itemVariants}
+        >
+          <motion.span
+            className="text-6xl block mb-4"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            🏆
+          </motion.span>
+          <p className="text-lg font-display font-bold">No one on the leaderboard yet!</p>
+          <p className="text-sm mt-1">Be the first to earn a Spark.</p>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

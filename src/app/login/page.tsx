@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -28,28 +29,39 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#E05C33] to-[#FF8C42]">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+      {/* Left panel — rich, warm, celebratory */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#1C1917] via-[#292524] to-[#1C1917]">
+        {/* Warm glow overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-amber-500/10" />
+        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+
         <div className="relative z-10 flex flex-col justify-center items-center w-full px-12">
-          <div className="text-[120px] leading-none mb-8 drop-shadow-lg">🌟</div>
-          <h1 className="text-white text-3xl font-bold text-center leading-tight mb-3">
+          {/* Logo mark */}
+          <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-[0_0_60px_rgba(224,92,51,0.3)] mb-10">
+            <Sparkles className="h-10 w-10 text-white" />
+          </div>
+
+          <h1 className="text-white text-4xl font-display font-bold text-center leading-tight mb-4">
             Appreciation is good.
             <br />
             Structured appreciation
             <br />
-            is <span className="underline decoration-white/40 underline-offset-4">culture</span>.
+            is <span className="text-gradient">culture</span>.
           </h1>
-          <p className="text-white/70 text-center text-base max-w-sm mt-2">
+          <p className="text-white/50 text-center text-base max-w-sm mt-2 leading-relaxed">
             Recognize your teammates for the behaviors that matter most.
           </p>
-          <div className="mt-12 flex gap-4">
+          <div className="mt-14 flex gap-3">
             {[
-              { emoji: "🤝", label: "Support" },
-              { emoji: "⚡", label: "Proactivity" },
-              { emoji: "🎨", label: "Artistry" },
+              { emoji: "🤝", label: "Support", color: "#3B82F6" },
+              { emoji: "⚡", label: "Proactivity", color: "#F59E0B" },
+              { emoji: "🎨", label: "Artistry", color: "#8B5CF6" },
             ].map((card) => (
-              <div key={card.label} className="bg-white/15 backdrop-blur-sm rounded-xl px-5 py-3 text-white/90 text-sm font-medium flex items-center gap-2 border border-white/10">
+              <div
+                key={card.label}
+                className="backdrop-blur-sm rounded-2xl px-5 py-3 text-white/90 text-sm font-semibold flex items-center gap-2 border transition-all hover:-translate-y-1"
+                style={{ backgroundColor: `${card.color}20`, borderColor: `${card.color}30` }}
+              >
                 <span className="text-lg">{card.emoji}</span>
                 {card.label}
               </div>
@@ -59,27 +71,29 @@ export default function LoginPage() {
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex flex-col justify-center items-center px-6 sm:px-12 bg-white">
+      <div className="flex-1 flex flex-col justify-center items-center px-6 sm:px-12 bg-background">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2.5 mb-10">
-            <span className="text-3xl">🌟</span>
-            <span className="text-xl font-bold text-[#E05C33]">YAAS Sparks</span>
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
+              <Sparkles className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-xl font-display font-bold text-foreground">YAAS Sparks</span>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-1">Sign in to YAAS Sparks</h2>
-            <p className="text-muted-foreground text-[15px]">Use your YAAS Google account</p>
+            <h2 className="text-2xl font-display font-bold text-foreground mb-1">Welcome back</h2>
+            <p className="text-muted-foreground text-[15px]">Sign in with your YAAS Google account</p>
           </div>
 
           {error && (
-            <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2 mb-4">{error}</p>
+            <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3 mb-4 font-medium">{error}</p>
           )}
 
           <Button
             onClick={handleGoogleLogin}
             disabled={loading}
             variant="outline"
-            className="w-full h-12 text-[15px] font-medium border-2 hover:bg-gray-50"
+            className="w-full h-13 text-[15px] font-semibold border-2 border-border/80 hover:bg-accent rounded-2xl transition-all hover:shadow-sm"
           >
             <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/app-shell";
 import type { Employee } from "@/types/database";

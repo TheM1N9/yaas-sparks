@@ -28,6 +28,11 @@ export default async function ProfilePage() {
     .eq("giver_id", user.id)
     .order("created_at", { ascending: false });
 
+  const { count: givenCount } = await supabase
+    .from("sparks")
+    .select("*", { count: "exact", head: true })
+    .eq("giver_id", user.id);
+
   const { data: milestones } = await supabase
     .from("milestone_claims")
     .select("*")
@@ -38,6 +43,7 @@ export default async function ProfilePage() {
       employee={employee}
       received={received ?? []}
       given={given ?? []}
+      givenCount={givenCount ?? 0}
       milestonesClaimed={milestones?.length ?? 0}
       isOwnProfile
     />
