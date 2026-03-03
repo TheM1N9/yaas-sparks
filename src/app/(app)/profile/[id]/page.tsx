@@ -46,6 +46,7 @@ export default async function OtherProfilePage({
       employee={employee}
       received={received ?? []}
       given={given ?? []}
+      givenCount={given?.length ?? 0}
       milestonesClaimed={milestones?.length ?? 0}
     />
   );
