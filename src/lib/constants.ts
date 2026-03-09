@@ -11,11 +11,14 @@ export const SPARK_CATEGORIES = [
 
 export const MILESTONES = [25, 50, 100] as const;
 
-export const MILESTONE_REWARDS: Record<number, { emoji: string; label: string }> = {
-  25: { emoji: "🎁", label: "Gift Card" },
-  50: { emoji: "⭐", label: "TBD Reward" },
-  100: { emoji: "🏆", label: "TBD Reward" },
+export const MILESTONE_REWARDS: Record<number, { emoji: string; label: string; amount: number; amountLabel: string }> = {
+  25: { emoji: "🎁", label: "Gift Card", amount: 5000, amountLabel: "₹5,000 Gift Card" },
+  50: { emoji: "⭐", label: "Gift Card", amount: 15000, amountLabel: "₹15,000 Gift Card" },
+  100: { emoji: "🏆", label: "Cash Reward", amount: 50000, amountLabel: "₹50,000 Cash" },
 };
+
+// Visible milestones (100 is hidden until reached)
+export const VISIBLE_MILESTONES = [25, 50] as const;
 
 export function getCurrentMonthKey() {
   const now = new Date();

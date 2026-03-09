@@ -106,15 +106,29 @@ export function DashboardClient({
       initial="hidden"
       animate="show"
     >
-      {/* Greeting */}
+      {/* Greeting with CTA Button */}
       <motion.div variants={itemVariants}>
-        <p className="text-sm font-medium text-primary uppercase tracking-wider mb-1">
-          {getGreeting()}
-        </p>
-        <h1 className="text-3xl font-display font-bold tracking-tight">
-          {employee.name.split(" ")[0]}, let&apos;s spark some joy
-          <span className="inline-block ml-2 animate-sparkle">&#10024;</span>
-        </h1>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-primary uppercase tracking-wider mb-1">
+              {getGreeting()}
+            </p>
+            <h1 className="text-3xl font-display font-bold tracking-tight">
+              {employee.name.split(" ")[0]}, let&apos;s spark some joy
+              <span className="inline-block ml-2 animate-sparkle">&#10024;</span>
+            </h1>
+          </div>
+          <Link href="/give">
+            <Button
+              size="lg"
+              className="h-11 px-6 text-sm font-display font-bold bg-[#E05C33] hover:bg-[#C44D28] text-white rounded-xl transition-colors shadow-sm"
+            >
+              <Flame className="mr-2 h-4 w-4" />
+              Give a Spark
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </motion.div>
 
       {/* Stat cards */}
@@ -150,19 +164,6 @@ export function DashboardClient({
         })}
       </motion.div>
 
-      {/* CTA Button */}
-      <motion.div variants={itemVariants}>
-        <Link href="/give">
-          <Button
-            size="lg"
-            className="h-11 px-6 text-sm font-display font-bold bg-[#E05C33] hover:bg-[#C44D28] text-white rounded-xl transition-colors shadow-sm"
-          >
-            <Flame className="mr-2 h-4 w-4" />
-            Give a Spark
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </Link>
-      </motion.div>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Mini leaderboard */}

@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { format, parse } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { SPARK_CATEGORIES } from "@/lib/constants";
+import { Button } from "@/components/ui/button";
+import { SPARK_CATEGORIES, getCurrentMonthKey } from "@/lib/constants";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 
 interface LeaderboardEmployee {
@@ -30,32 +33,77 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
+function formatMonthDisplay(monthKey: string): string {
+  try {
+    const date = parse(monthKey, "yyyy-MM", new Date());
+    return format(date, "MMMM yyyy");
+  } catch {
+    return monthKey;
+  }
+}
+
 export function LeaderboardClient({
   employees,
   categoryBreakdown,
   currentUserId,
+  availableMonths,
+  monthlySparkCounts,
+  monthlyCategoryBreakdown,
 }: {
   employees: LeaderboardEmployee[];
   categoryBreakdown: Record<string, Record<string, number>>;
   currentUserId: string;
+  availableMonths: string[];
+  monthlySparkCounts: Record<string, Record<string, number>>;
+  monthlyCategoryBreakdown: Record<string, Record<string, Record<string, number>>>;
 }) {
-  const [view, setView] = useState<"all" | "month">("all");
+  const currentMonth = getCurrentMonthKey();
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
   const pluralize = (count: number) => `${count} ${count === 1 ? 'spark' : 'sparks'}`;
 
-  const sorted = [...employees].sort((a, b) => {
-    const diff = view === "all"
-      ? b.sparks_earned_total - a.sparks_earned_total
-      : b.current_cycle_sparks - a.current_cycle_sparks;
-    return diff !== 0 ? diff : a.name.localeCompare(b.name);
-  });
+  // Get current month index for navigation
+  const currentMonthIndex = availableMonths.indexOf(selectedMonth);
+  const canGoNewer = currentMonthIndex > 0;
+  const canGoOlder = currentMonthIndex < availableMonths.length - 1;
 
-  const getCount = (emp: LeaderboardEmployee) =>
-    view === "all" ? emp.sparks_earned_total : emp.current_cycle_sparks;
+  const goNewer = () => {
+    if (canGoNewer) {
+      setSelectedMonth(availableMonths[currentMonthIndex - 1]);
+    }
+  };
+
+  const goOlder = () => {
+    if (canGoOlder) {
+      setSelectedMonth(availableMonths[currentMonthIndex + 1]);
+    }
+  };
+
+  // Build sorted list based on selected month
+  const sorted = useMemo(() => {
+    const monthCounts = monthlySparkCounts[selectedMonth] || {};
+    return [...employees]
+      .map((emp) => ({
+        ...emp,
+        monthlyCount: monthCounts[emp.id] || 0,
+      }))
+      .filter((emp) => emp.monthlyCount > 0)
+      .sort((a, b) => {
+        const diff = b.monthlyCount - a.monthlyCount;
+        return diff !== 0 ? diff : a.name.localeCompare(b.name);
+      });
+  }, [employees, monthlySparkCounts, selectedMonth]);
+
+  // Get category breakdown for selected month
+  const getMonthCategoryBreakdown = (employeeId: string) => {
+    return monthlyCategoryBreakdown[selectedMonth]?.[employeeId] || {};
+  };
 
   const top3 = sorted.slice(0, 3);
   const rest = sorted.slice(3);
   const medals = ["🥇", "🥈", "🥉"];
+
+  const isCurrentMonth = selectedMonth === currentMonth;
 
   return (
     <motion.div
@@ -64,36 +112,45 @@ export function LeaderboardClient({
       initial="hidden"
       animate="show"
     >
-      <motion.div className="flex items-center justify-between" variants={itemVariants}>
+      <motion.div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4" variants={itemVariants}>
         <div>
           <h1 className="text-3xl font-display font-bold tracking-tight">Leaderboard</h1>
-          <p className="text-muted-foreground text-[15px] mt-0.5">Top spark earners across the company</p>
+          <p className="text-muted-foreground text-[15px] mt-0.5">Monthly spark earners</p>
         </div>
 
-        {/* Pill toggle */}
-        <div className="flex bg-white rounded-2xl p-1 border border-border/60 shadow-sm">
-          <button
-            onClick={() => setView("all")}
-            className={cn(
-              "px-5 py-2 text-[13px] font-semibold rounded-xl transition-all duration-200",
-              view === "all"
-                ? "bg-gradient-to-r from-primary to-amber-500 text-white shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
+        {/* Month Navigation */}
+        <div className="flex items-center gap-2 bg-white rounded-2xl p-1.5 border border-border/60 shadow-sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goOlder}
+            disabled={!canGoOlder}
+            className="h-9 w-9 p-0 rounded-xl"
           >
-            All Time
-          </button>
-          <button
-            onClick={() => setView("month")}
-            className={cn(
-              "px-5 py-2 text-[13px] font-semibold rounded-xl transition-all duration-200",
-              view === "month"
-                ? "bg-gradient-to-r from-primary to-amber-500 text-white shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <div className="flex items-center gap-2 px-3 min-w-[160px] justify-center">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-[13px] font-semibold">
+              {formatMonthDisplay(selectedMonth)}
+            </span>
+            {isCurrentMonth && (
+              <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">
+                NOW
+              </span>
             )}
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goNewer}
+            disabled={!canGoNewer}
+            className="h-9 w-9 p-0 rounded-xl"
           >
-            This Cycle
-          </button>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </motion.div>
 
@@ -104,7 +161,7 @@ export function LeaderboardClient({
           {[1, 0, 2].map((idx) => {
             const emp = top3[idx];
             if (!emp) return <div key={idx} />;
-            const count = getCount(emp);
+            const count = emp.monthlyCount;
             const isFirst = idx === 0;
             const isSecond = idx === 1;
 
@@ -202,9 +259,9 @@ export function LeaderboardClient({
           <Card className="border-0 warm-card rounded-2xl shadow-sm overflow-hidden">
             <CardContent className="p-2">
               {rest.map((emp, i) => {
-                const count = getCount(emp);
+                const count = emp.monthlyCount;
                 const rank = i + 4;
-                const cats = categoryBreakdown[emp.id] || {};
+                const cats = getMonthCategoryBreakdown(emp.id);
                 return (
                   <motion.div
                     key={emp.id}
@@ -267,8 +324,10 @@ export function LeaderboardClient({
           >
             🏆
           </motion.span>
-          <p className="text-lg font-display font-bold">No one on the leaderboard yet!</p>
-          <p className="text-sm mt-1">Be the first to earn a Spark.</p>
+          <p className="text-lg font-display font-bold">No sparks for {formatMonthDisplay(selectedMonth)}</p>
+          <p className="text-sm mt-1">
+            {isCurrentMonth ? "Be the first to earn a Spark this month!" : "No one earned sparks during this month."}
+          </p>
         </motion.div>
       )}
     </motion.div>

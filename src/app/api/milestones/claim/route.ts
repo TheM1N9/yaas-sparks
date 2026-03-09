@@ -25,40 +25,30 @@ export async function POST(request: Request) {
     const admin = createAdminClient();
 
     // Get employee data
-    const { data: employee } = await admin
+    const { data: employee, error: employeeError } = await admin
       .from("employees")
       .select("current_cycle_sparks")
       .eq("id", user.id)
       .single();
 
+    if (employeeError) {
+      console.error("Employee fetch error:", employeeError);
+      return NextResponse.json({ error: `Employee fetch failed: ${employeeError.message}` }, { status: 500 });
+    }
+
     if (!employee) {
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
     }
 
-    // Check if milestone reached
+    // Check if user has enough sparks to claim this milestone
     if (employee.current_cycle_sparks < milestone) {
       return NextResponse.json(
-        { error: "Milestone not yet reached" },
+        { error: `You need at least ${milestone} sparks to claim this reward. You have ${employee.current_cycle_sparks}.` },
         { status: 400 }
       );
     }
 
-    // Check if already claimed
-    const { data: existing } = await admin
-      .from("milestone_claims")
-      .select("id")
-      .eq("employee_id", user.id)
-      .eq("milestone", milestone)
-      .maybeSingle();
-
-    if (existing) {
-      return NextResponse.json(
-        { error: "Milestone already claimed" },
-        { status: 400 }
-      );
-    }
-
-    // Insert claim
+    // Insert claim record
     const { error: insertError } = await admin
       .from("milestone_claims")
       .insert({
@@ -67,22 +57,33 @@ export async function POST(request: Request) {
       });
 
     if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+      console.error("Milestone claim insert error:", insertError);
+      return NextResponse.json({ error: `Claim failed: ${insertError.message}` }, { status: 500 });
     }
 
-    // If 100-spark milestone, reset cycle
-    if (milestone === 100) {
-      await admin
-        .from("employees")
-        .update({
-          current_cycle_sparks: 0,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id);
+    // Deduct the milestone amount from current_cycle_sparks (wallet)
+    const newBalance = employee.current_cycle_sparks - milestone;
+    
+    const { error: updateError } = await admin
+      .from("employees")
+      .update({
+        current_cycle_sparks: newBalance,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
+
+    if (updateError) {
+      console.error("Employee update error:", updateError);
+      return NextResponse.json({ error: `Balance update failed: ${updateError.message}` }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ 
+      success: true,
+      newBalance,
+      message: `Successfully claimed ${milestone} sparks reward! Your new balance is ${newBalance} sparks.`
+    });
+  } catch (error) {
+    console.error("Milestone claim error:", error);
+    return NextResponse.json({ error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` }, { status: 500 });
   }
 }

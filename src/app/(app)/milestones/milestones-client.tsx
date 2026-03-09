@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { motion } from "motion/react";
-import { Lock, CheckCircle2, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, Sparkles, Wallet, Gift } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MILESTONES, MILESTONE_REWARDS } from "@/lib/constants";
@@ -35,8 +35,27 @@ export function MilestonesClient({
   const [loading, setLoading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const claimedMilestones = new Set(claims.map((c) => c.milestone));
-  const progressPercent = Math.min((currentCycleSparks / 100) * 100, 100);
+  // Remove the claimed milestones check - allow multiple claims of same milestone
+  
+  // Determine which milestones to show
+  // Show 25 and 50 always, show 100 only if user has >= 100 sparks
+  const visibleMilestones = useMemo(() => {
+    const milestones: number[] = [25, 50];
+    if (currentCycleSparks >= 100) {
+      milestones.push(100);
+    }
+    return milestones;
+  }, [currentCycleSparks]);
+
+  // Calculate the next milestone for progress display
+  const nextMilestone = useMemo(() => {
+    for (const m of MILESTONES) {
+      if (currentCycleSparks < m) return m;
+    }
+    return 100;
+  }, [currentCycleSparks]);
+
+  const progressPercent = Math.min((currentCycleSparks / nextMilestone) * 100, 100);
 
   async function handleClaim(milestone: number) {
     setLoading(milestone);
@@ -69,78 +88,10 @@ export function MilestonesClient({
       <motion.div variants={itemVariants}>
         <h1 className="text-3xl font-display font-bold tracking-tight">Milestones</h1>
         <p className="text-muted-foreground text-[15px] mt-0.5">
-          Earn Sparks and unlock rewards in your current cycle
+          Earn Sparks and unlock rewards — claiming deducts from your wallet
         </p>
       </motion.div>
 
-      {/* Visual progress bar with glow */}
-      <motion.div variants={itemVariants}>
-        <Card className="border-0 warm-card rounded-2xl shadow-sm overflow-hidden">
-          <CardContent className="pt-6 pb-6 px-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Cycle Progress</span>
-              <span className="text-lg font-display font-bold text-primary tabular-nums">
-                {currentCycleSparks} <span className="text-muted-foreground font-normal text-sm">/ 100</span>
-              </span>
-            </div>
-            <div className="relative">
-              {/* Track */}
-              <div className="h-4 bg-accent rounded-full overflow-hidden">
-                {/* Fill */}
-                <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-primary via-[#E8724A] to-amber-500 progress-glow"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPercent}%` }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
-                />
-              </div>
-              {/* Glow dot at current position */}
-              {progressPercent > 0 && (
-                <motion.div
-                  className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-primary border-3 border-white shadow-[0_0_12px_rgba(224,92,51,0.5)]"
-                  initial={{ left: 0 }}
-                  animate={{ left: `calc(${progressPercent}% - 10px)` }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
-                />
-              )}
-              {/* Milestone markers */}
-              {MILESTONES.map((m) => (
-                <div
-                  key={m}
-                  className="absolute top-1/2"
-                  style={{ left: `${(m / 100) * 100}%`, transform: `translateX(-50%) translateY(-50%)` }}
-                >
-                  <div
-                    className={cn(
-                      "w-4 h-4 rounded-full border-3 transition-all",
-                      currentCycleSparks >= m
-                        ? "bg-primary border-white shadow-[0_0_8px_rgba(224,92,51,0.4)]"
-                        : "bg-white border-border/60"
-                    )}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="relative mt-4 h-4">
-              {/* 0 label — pinned left */}
-              <span className="absolute left-0 text-[11px] text-muted-foreground tabular-nums font-medium" style={{ transform: 'translateX(0%)' }}>0</span>
-              {/* Milestone labels — pinned to exact same % positions as dots */}
-              {MILESTONES.map((m) => (
-                <span
-                  key={m}
-                  className={cn(
-                    "absolute text-[11px] tabular-nums font-medium",
-                    currentCycleSparks >= m ? "text-primary font-bold" : "text-muted-foreground"
-                  )}
-                  style={{ left: `${m}%`, transform: 'translateX(-50%)' }}
-                >
-                  {m}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
 
       {error && (
         <motion.div
@@ -152,14 +103,12 @@ export function MilestonesClient({
         </motion.div>
       )}
 
-      {/* Milestone cards — dramatic states */}
+      {/* Milestone cards */}
       <div className="space-y-4">
-        {MILESTONES.map((milestone, i) => {
+        {visibleMilestones.map((milestone, i) => {
           const reward = MILESTONE_REWARDS[milestone];
           const reached = currentCycleSparks >= milestone;
-          const claimed = claimedMilestones.has(milestone);
-          const canClaim = reached && !claimed;
-          const progressToThis = Math.min((currentCycleSparks / milestone) * 100, 100);
+          const canClaim = reached; // Can always claim if you have enough sparks
 
           return (
             <motion.div
@@ -170,22 +119,20 @@ export function MilestonesClient({
             >
               <Card
                 className={cn(
-                  "border-0 rounded-2xl transition-all overflow-hidden relative",
+                  "rounded-2xl transition-all overflow-hidden relative",
                   canClaim
-                    ? "milestone-unlocked shadow-lg milestone-glow"
-                    : claimed
-                    ? "milestone-claimed shadow-sm"
-                    : "warm-card shadow-sm milestone-locked"
+                    ? "border-2 border-primary shadow-lg bg-gradient-to-br from-white to-orange-50"
+                    : "warm-card shadow-sm milestone-locked border-0"
                 )}
               >
                 <CardContent className="p-0">
-                  {/* Top progress strip */}
-                  {!claimed && (
+                  {/* Top progress strip for unreached */}
+                  {!reached && (
                     <div className="h-1 w-full bg-accent">
                       <motion.div
                         className="h-full bg-gradient-to-r from-primary to-amber-500"
                         initial={{ width: 0 }}
-                        animate={{ width: `${progressToThis}%` }}
+                        animate={{ width: `${Math.min((currentCycleSparks / milestone) * 100, 100)}%` }}
                         transition={{ duration: 1, delay: i * 0.15, ease: "easeOut" }}
                       />
                     </div>
@@ -196,26 +143,16 @@ export function MilestonesClient({
                     <motion.div
                       className={cn(
                         "h-16 w-16 rounded-2xl flex items-center justify-center shrink-0 relative",
-                        claimed
-                          ? "bg-emerald-100"
-                          : canClaim
+                        canClaim
                           ? "bg-gradient-to-br from-primary/20 to-amber-500/20"
                           : "bg-accent"
                       )}
-                      animate={canClaim ? { scale: [1, 1.05, 1] } : {}}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      <span className={cn("text-4xl", !reached && !claimed && "grayscale opacity-50")}>{reward.emoji}</span>
+                      <span className={cn("text-4xl", !reached && "grayscale opacity-50")}>{reward.emoji}</span>
                       {/* Lock overlay for unreached */}
-                      {!reached && !claimed && (
+                      {!reached && (
                         <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-accent/60">
                           <Lock className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                      )}
-                      {/* Checkmark for claimed */}
-                      {claimed && (
-                        <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-sm">
-                          <CheckCircle2 className="h-4 w-4 text-white" />
                         </div>
                       )}
                     </motion.div>
@@ -224,22 +161,30 @@ export function MilestonesClient({
                     <div className="flex-1 min-w-0">
                       <h3 className={cn(
                         "font-display font-bold text-base",
-                        !reached && !claimed && "text-muted-foreground"
+                        !reached && "text-muted-foreground"
                       )}>
                         {milestone} Sparks
                       </h3>
-                      <p className="text-[13px] text-muted-foreground mt-0.5">
-                        {reward.label}
-                        {milestone === 100 && " — resets cycle"}
+                      <p className={cn(
+                        "text-[14px] font-semibold mt-0.5",
+                        canClaim ? "text-primary" : "text-muted-foreground"
+                      )}>
+                        {reward.amountLabel}
                       </p>
+                      {/* Info about deduction */}
+                      {canClaim && (
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Claiming will deduct {milestone} sparks from your wallet
+                        </p>
+                      )}
                       {/* Mini progress for unreached */}
-                      {!reached && !claimed && (
+                      {!reached && (
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex-1 h-1.5 bg-border/40 rounded-full overflow-hidden">
                             <motion.div
                               className="h-full bg-muted-foreground/30 rounded-full"
                               initial={{ width: 0 }}
-                              animate={{ width: `${progressToThis}%` }}
+                              animate={{ width: `${Math.min((currentCycleSparks / milestone) * 100, 100)}%` }}
                               transition={{ duration: 1, delay: i * 0.15 }}
                             />
                           </div>
@@ -251,11 +196,7 @@ export function MilestonesClient({
                     </div>
 
                     {/* Action */}
-                    {claimed ? (
-                      <span className="text-[13px] font-bold text-emerald-600 bg-emerald-100 px-4 py-2 rounded-xl flex items-center gap-1.5">
-                        <CheckCircle2 className="h-4 w-4" /> Claimed
-                      </span>
-                    ) : canClaim ? (
+                    {canClaim ? (
                       <motion.div
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -273,7 +214,7 @@ export function MilestonesClient({
                           ) : (
                             <span className="flex items-center gap-2">
                               <Sparkles className="h-4 w-4" />
-                              Claim Reward
+                              Claim
                             </span>
                           )}
                         </Button>
@@ -290,6 +231,33 @@ export function MilestonesClient({
             </motion.div>
           );
         })}
+
+        {/* Teaser for 100 sparks if not yet visible */}
+        {currentCycleSparks < 100 && (
+          <motion.div variants={itemVariants}>
+            <Card className="border-0 rounded-2xl warm-card shadow-sm overflow-hidden opacity-60">
+              <CardContent className="p-5 sm:p-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-2xl bg-accent flex items-center justify-center relative">
+                    <span className="text-4xl blur-sm">🏆</span>
+                    <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-accent/80">
+                      <Lock className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-display font-bold text-base text-muted-foreground">100 Sparks</h3>
+                    <p className="text-[13px] text-muted-foreground mt-0.5">
+                      A special reward awaits... Keep earning!
+                    </p>
+                  </div>
+                  <span className="text-[13px] text-muted-foreground bg-accent px-4 py-2 rounded-xl font-medium">
+                    Hidden
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
 
       {/* Claims history */}
@@ -311,7 +279,7 @@ export function MilestonesClient({
                       </div>
                       <div>
                         <span className="text-sm font-semibold">
-                          {claim.milestone} Sparks
+                          {claim.milestone} Sparks — {reward?.amountLabel}
                         </span>
                         <p className="text-[12px] text-muted-foreground">{reward?.label}</p>
                       </div>
