@@ -28,7 +28,7 @@ export function NavBar({ employee }: { employee: Employee | null }) {
             <Sparkles className="h-4 w-4 text-white" />
           </div>
           <span className="text-[15px] font-display font-bold tracking-tight text-white">
-            YAAS Sparks
+            YAASparks
           </span>
         </div>
 
@@ -128,7 +128,7 @@ export function NavBar({ employee }: { employee: Employee | null }) {
             <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
               <Sparkles className="h-3.5 w-3.5 text-white" />
             </div>
-            <span className="text-[15px] font-display font-bold text-foreground">YAAS Sparks</span>
+            <span className="text-[15px] font-display font-bold text-foreground">YAASparks</span>
           </Link>
           {employee && (
             <Link href="/profile">

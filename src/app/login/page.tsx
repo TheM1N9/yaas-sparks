@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,16 @@ import { Button } from "@/components/ui/button";
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam === 'unauthorized_domain') {
+      setError('Please use your @yaas.studio or @yaas.media email address to sign in.');
+    } else if (errorParam === 'auth_failed') {
+      setError('Authentication failed. Please try again.');
+    }
+  }, [searchParams]);
 
   const handleGoogleLogin = async () => {
     setError("");
@@ -77,7 +88,7 @@ export default function LoginPage() {
             <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
-            <span className="text-xl font-display font-bold text-foreground">YAAS Sparks</span>
+            <span className="text-xl font-display font-bold text-foreground">YAASparks</span>
           </div>
 
           <div className="mb-8">
@@ -105,7 +116,7 @@ export default function LoginPage() {
           </Button>
 
           <p className="text-xs text-center text-muted-foreground mt-6">
-            Only @yaas.com accounts can sign in.
+            Only @yaas.studio and @yaas.media accounts can sign in.
           </p>
         </div>
       </div>

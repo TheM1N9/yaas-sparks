@@ -245,7 +245,7 @@ export function MilestonesClient({
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-display font-bold text-base text-muted-foreground">100 Sparks</h3>
+                    <h3 className="font-display font-bold text-base text-muted-foreground">??? Sparks</h3>
                     <p className="text-[13px] text-muted-foreground mt-0.5">
                       A special reward awaits... Keep earning!
                     </p>

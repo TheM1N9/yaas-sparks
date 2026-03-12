@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { getCurrentMonthKey, SPARKS_PER_MONTH, getCategoryByName, SPARK_CATEGORIES } from "@/lib/constants";
+import { sendSlackNotificationWithAPI } from "@/lib/slack";
 
 export async function POST(request: Request) {
   try {
@@ -133,41 +134,21 @@ export async function POST(request: Request) {
       .eq("id", user.id)
       .single();
 
-    // Fire Slack webhook
-    const slackUrl = process.env.SLACK_WEBHOOK_URL;
-    if (slackUrl) {
-      const cat = getCategoryByName(category);
+    // Send Slack notification via Bot API
+    const cat = getCategoryByName(category);
+    if (cat && giverData?.name) {
       try {
-        await fetch(slackUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            blocks: [
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: `🌟 *${giverData?.name || "Someone"}* just sparked *${receiver.name}*!`,
-                },
-              },
-              {
-                type: "section",
-                fields: [
-                  {
-                    type: "mrkdwn",
-                    text: `*Category:*\n${cat?.emoji} ${category}`,
-                  },
-                  {
-                    type: "mrkdwn",
-                    text: `*Reason:*\n_${reason}_`,
-                  },
-                ],
-              },
-            ],
-          }),
-        });
-      } catch {
-        // Slack webhook failure shouldn't block the response
+        await sendSlackNotificationWithAPI(
+          giverData.name,
+          receiver.name,
+          category,
+          reason,
+          cat.emoji,
+          '#sparks-notifications'
+        );
+      } catch (error) {
+        // Slack notification failure shouldn't block the response
+        console.error('Failed to send Slack notification:', error);
       }
     }
 

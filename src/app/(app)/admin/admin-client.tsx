@@ -73,7 +73,7 @@ function generateEmailTemplate(
   amountLabel: string,
   claimedAt: string
 ): string {
-  return `Subject: 🌟 Your YAAS Sparks Reward - ${amountLabel}
+  return `Subject: 🌟 Your YAASparks Reward - ${amountLabel}
 
 Hi ${employeeName},
 
@@ -91,10 +91,10 @@ Thank you for being an amazing part of the YAAS team! Your contributions don't g
 Keep sparking! ✨
 
 Best regards,
-The YAAS Sparks Team
+The YAASparks Team
 
 ---
-This is an automated message from YAAS Sparks.
+This is an automated message from YAASparks.
 Employee Email: ${employeeEmail}`;
 }
 
@@ -103,6 +103,7 @@ export function AdminClient({
   sparks,
   milestoneClaims,
   availableMonths,
+  
   monthlyReceivedCounts,
 }: {
   employees: Employee[];

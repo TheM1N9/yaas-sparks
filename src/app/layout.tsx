@@ -15,7 +15,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "YAAS Sparks",
+  title: "YAASparks",
   description: "Appreciation is good. Structured appreciation is culture.",
 };
 
