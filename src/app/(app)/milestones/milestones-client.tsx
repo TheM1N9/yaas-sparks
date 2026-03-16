@@ -235,23 +235,55 @@ export function MilestonesClient({
         {/* Teaser for 100 sparks if not yet visible */}
         {currentCycleSparks < 100 && (
           <motion.div variants={itemVariants}>
-            <Card className="border-0 rounded-2xl warm-card shadow-sm overflow-hidden opacity-60">
-              <CardContent className="p-5 sm:p-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-2xl bg-accent flex items-center justify-center relative">
-                    <span className="text-4xl blur-sm">🏆</span>
-                    <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-accent/80">
-                      <Lock className="h-6 w-6 text-muted-foreground" />
+            <Card className="rounded-2xl transition-all overflow-hidden relative warm-card shadow-sm milestone-locked border-0">
+              <CardContent className="p-0">
+                {/* Top progress strip */}
+                <div className="h-1 w-full bg-accent">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-primary to-amber-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((currentCycleSparks / 100) * 100, 100)}%` }}
+                    transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+                  />
+                </div>
+
+                <div className="flex items-center gap-4 p-5 sm:p-6">
+                  {/* Icon */}
+                  <div className="h-16 w-16 rounded-2xl bg-accent flex items-center justify-center shrink-0 relative">
+                    <span className="text-4xl grayscale opacity-50">🏆</span>
+                    <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-accent/60">
+                      <Lock className="h-5 w-5 text-muted-foreground" />
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-display font-bold text-base text-muted-foreground">??? Sparks</h3>
-                    <p className="text-[13px] text-muted-foreground mt-0.5">
-                      A special reward awaits... Keep earning!
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display font-bold text-base text-muted-foreground">
+                      100 Sparks
+                    </h3>
+                    <p className="text-[14px] font-semibold mt-0.5 text-muted-foreground">
+                      ₹XX,XXX cash reward
                     </p>
+                    {/* Mini progress */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex-1 h-1.5 bg-border/40 rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-muted-foreground/30 rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min((currentCycleSparks / 100) * 100, 100)}%` }}
+                          transition={{ duration: 1, delay: 0.3 }}
+                        />
+                      </div>
+                      <span className="text-[11px] text-muted-foreground tabular-nums font-medium">
+                        {currentCycleSparks}/100
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[13px] text-muted-foreground bg-accent px-4 py-2 rounded-xl font-medium">
-                    Hidden
+
+                  {/* Action */}
+                  <span className="text-[13px] text-muted-foreground bg-accent px-4 py-2 rounded-xl tabular-nums font-medium flex items-center gap-1.5">
+                    <Lock className="h-3.5 w-3.5" />
+                    {currentCycleSparks}/100
                   </span>
                 </div>
               </CardContent>
